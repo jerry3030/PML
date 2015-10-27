@@ -1,2 +1,2 @@
-# Practical Machine Learning :  course project direct link
+# Practical Machine Learning :  course project
 http://jerry3030.github.io/PML/

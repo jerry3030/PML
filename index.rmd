@@ -1,0 +1,81 @@
+---
+title: "PML"
+author: "Sangjin Park"
+date: "2015년 10월 25일"
+output: html_document
+---
+# Practice Machine Learning 
+# Course Project
+```{r}
+datarow <- read.csv(file = "pml-training.csv", na.strings=c("NA","#DIV/0!",""))
+datatest <- read.csv(file = "pml-testing.csv",na.strings=c("NA","#DIV/0!",""))
+```
+
+# Clean the data ; remove the columns of NAs.
+```{r}
+data <- datarow[,colSums(is.na(datarow)) == 0]
+test <- datatest[,colSums(is.na(datatest)) == 0]
+names(data)
+```
+
+# Remove variables which don't need to predict the model
+```{r}
+data <- data[,-(1:7)]
+test <- test[,-(1:7)]
+```
+
+
+#Creating Training, Test and Validation sets [Cross validation]
+```{r}
+library(caret)
+set.seed(333)  ## set.seed for reproducibility
+inTrain <- createDataPartition(y=data$classe, p=0.7, list=FALSE)
+training <- data[inTrain,] ; validation <- data[-inTrain,]
+```
+
+# dataset
+```{r}
+dim(training)
+dim(validation)
+```
+
+# Build model (Random Forest)
+```{r}
+modrf <- train(classe ~ ., method = "rf", 
+               data=training, trControl = trainControl(method = "cv"), number=5)
+modrf$finalModel
+```
+
+
+# Validate Performance
+```{r}
+prerf <- predict(modrf, validation)
+confusionMatrix(validation$classe, prerf)
+```
+ The Accurary is 99.4%, so sample error is 2.6%
+
+# Predict test data set
+```{r}
+pretest <- predict(modrf, test)
+pretest 
+```
+
+
+# Submission
+```{r}
+pml_write_files = function(x){
+  n = length(x)
+  for(i in 1:n){
+    filename = paste0("problem_id_",i,".txt")
+    write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+  }
+}
+
+pml_write_files(pretest)
+```
+
+#Why you made the choices you did
+Random Forest is a trandmark for an ensaemble of decision trees.
+For this modeling, they suffer from high Variance.
+So, they have very few parameters to tune and can be used quite efficiently
+with default parameter setting. Random Forest is good choice for this data sets.
